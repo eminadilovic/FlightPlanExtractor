@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FlightPlanExtractor.ConsoleApp/FlightPlanExtractor.ConsoleApp.csproj" />
+    <Project Path="src/FlightPlanExtractor.Core/FlightPlanExtractor.Core.csproj" />
+    <Project Path="src/FlightPlanExtractor.Pdf/FlightPlanExtractor.Pdf.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FlightPlanExtractor.Tests/FlightPlanExtractor.Tests.csproj" />
+  </Folder>
+</Solution>
