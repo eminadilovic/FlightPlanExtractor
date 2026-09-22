@@ -28,12 +28,12 @@ result.HasErrors
 
 ## Structure
 
-| Project | Role | Depends on |
-|---|---|---|
-| `FlightPlanExtractor.Core` | Model, diagnostics, extraction engine, layouts, joining flights | nothing (only DI abstractions) |
-| `FlightPlanExtractor.Pdf` | `PdfPigReader`, the only class that knows the PDF library | Core, PdfPig |
-| `FlightPlanExtractor.ConsoleApp` | Sample host | Core, Pdf |
-| `FlightPlanExtractor.Tests` | xUnit tests | Core, Pdf |
+| Project                          | Role                                                            | Depends on                     |
+| -------------------------------- | --------------------------------------------------------------- | ------------------------------ |
+| `FlightPlanExtractor.Core`       | Model, diagnostics, extraction engine, layouts, joining flights | nothing (only DI abstractions) |
+| `FlightPlanExtractor.Pdf`        | `PdfPigReader`, the only class that knows the PDF library       | Core, PdfPig                   |
+| `FlightPlanExtractor.ConsoleApp` | Sample host                                                     | Core, Pdf                      |
+| `FlightPlanExtractor.Tests`      | xUnit tests                                                     | Core, Pdf                      |
 
 Core defines `IPdfReader`; the Pdf project implements it. Core therefore has no idea what PdfPig is,
 almost all logic is tested from plain text without a PDF, and the library can be swapped in one place.
@@ -95,11 +95,11 @@ logic and localization), `Message` (English, for logs), `Field`, `PageNumber`, `
 
 A field can fail in three ways, reported separately because the fix is different:
 
-| Code | Meaning | Typical fix |
-|---|---|---|
-| `LabelNotFound` | the label / header is not on the page | add the new label to the layout |
+| Code                  | Meaning                                    | Typical fix                       |
+| --------------------- | ------------------------------------------ | --------------------------------- |
+| `LabelNotFound`       | the label / header is not on the page      | add the new label to the layout   |
 | `ValueFormatMismatch` | label found, value has an unexpected shape | add the new pattern to the format |
-| `ValueInvalid` | right shape, impossible value (`31FEB24`) | the document is wrong |
+| `ValueInvalid`        | right shape, impossible value (`31FEB24`)  | the document is wrong             |
 
 Other codes: `DocumentUnreadable` and `NoRelevantPagesFound` (Fatal), `FlightKeyUnreadable`,
 `ChapterMissing` (Error), `ChaptersDisagree`, `DuplicateChapter` (Warning).
@@ -113,7 +113,7 @@ The ATC call sign is printed in both chapters and compared as a consistency chec
 ## Things I found in the sample file
 
 - The Crew Briefings are in the **reverse order** of the OFPs. The crew briefing screenshot in the task
-  (LX1073, 1/26 PAX) is the first crew briefing in the file but belongs to the *last* OFP. Joining "first with first"
+  (LX1073, 1/26 PAX) is the first crew briefing in the file but belongs to the _last_ OFP. Joining "first with first"
   would produce wrong flights without any error, so flights are joined by date + flight number only.
 - `ALTN2:` is empty in all four flights and followed by `Delay (Code/Min):` on the same line. Without a pattern
   for the value, the second alternate would be "Delay".
@@ -137,24 +137,3 @@ The ATC call sign is printed in both chapters and compared as a consistency chec
 5. `DOI: 0` is returned as 0, not interpreted as "missing".
 6. Only the first page of each chapter is needed; the crew table fits on it.
 7. Date + flight number identify a flight within one document.
-
-## Not done / next steps
-
-- One document format, as confirmed by the team. Another format would be a new layout + `IChapterExtractor`.
-- The aircraft registration in the Crew Briefing is not read (it has neither label nor column header there), so
-  only the call sign is cross-checked.
-- `Remarks:` in the Crew Briefing looks like useful free text; it would be one more line in the layout.
-- Layouts are C# (type-safe, parsers are functions). They are shaped so they could move to configuration if
-  formats need to change without a deployment.
-- No logging. `ILogger` in `FlightDataExtractor` would be the place; diagnostics already carry the content.
-- `Extract` is synchronous because PdfPig is. For a web host I would wrap the call rather than fake an async API.
-- Unexpected exceptions (bugs) are not caught and turned into diagnostics; I think they should surface.
-- The tolerances in `TableReader` / `PageContent` (points) come from this one sample.
-
-## Clarified with the team
-
-| Question | Answer | Effect |
-|---|---|---|
-| First / last navigation point when the route starts with a SID or ends with a STAR? | First / last word with letters only; space and `/` are delimiters. `ANEKI`, `SPESA`. | `Parsers.Waypoints` splits on both; see assumption 3. |
-| One field cannot be read: partial flight or reject the flight? | Return the flight, report the problem per field. | Already the design. `ExtractionResult.DiagnosticsFor(flight)` gives the per-field diagnostics of one flight. |
-| Other OFP formats to expect? | The format stays. Pages can be added or removed and texts can change; a changed label is an error of that field, the rest must still work. | Pages are found by content, not by number. Test: `Renamed_label_costs_only_that_field`. Fix for a renamed label: add it to the field's label list in the layout. |
